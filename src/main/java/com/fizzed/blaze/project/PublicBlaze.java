@@ -2,6 +2,9 @@ package com.fizzed.blaze.project;
 
 import com.fizzed.blaze.Config;
 import com.fizzed.blaze.Contexts;
+import com.fizzed.blaze.Task;
+import com.fizzed.buildx.Buildx;
+import com.fizzed.buildx.Target;
 import com.fizzed.jne.*;
 import org.slf4j.Logger;
 
@@ -21,6 +24,7 @@ import java.util.stream.Stream;
 
 import static com.fizzed.blaze.Contexts.fail;
 import static com.fizzed.blaze.Systems.exec;
+import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.joining;
 
 public class PublicBlaze {
@@ -212,10 +216,45 @@ public class PublicBlaze {
             .run();
     }
 
-    public void test_on_all_jdks() throws Exception {
+    protected List<Target> crossTestTargets() {
+        return asList(
+            new Target("linux", "x64").setTags("test").setHost("bmh-build-x64-linux-latest"),
+            new Target("linux", "arm64").setTags("test").setHost("bmh-build-arm64-linux-latest"),
+            new Target("linux", "riscv64").setTags("test").setHost("bmh-build-riscv64-linux-latest"),
+            new Target("linux_musl", "x64").setTags("test").setHost("bmh-build-x64-linux-musl-latest"),
+            new Target("macos", "x64").setTags("test").setHost("bmh-build-x64-macos-latest"),
+            new Target("macos", "arm64").setTags("test").setHost("bmh-build-arm64-macos-latest"),
+            new Target("windows", "x64").setTags("test").setHost("bmh-build-x64-windows-latest"),
+            new Target("windows", "arm64").setTags("test").setHost("bmh-build-arm64-windows-latest"),
+            new Target("freebsd", "x64").setTags("test").setHost("bmh-build-x64-freebsd-latest"),
+            new Target("openbsd", "x64").setTags("test").setHost("bmh-build-x64-openbsd-latest")
+        );
+    }
+
+    protected void mvnCrossTests(List<Target> crossTestTargets) throws Exception {
+        new Buildx(crossTestTargets)
+            .tags("test")
+            .execute((target, project) -> {
+                project.action("mvn", "clean", "test")
+                    .run();
+            });
+    }
+
+    // public methods
+
+    @Task("For maintainers only. Runs tests across operating systems and hardware architectures.")
+    public void cross_tests() throws Exception {
+        final List<Target> crossTestTargets = this.crossTestTargets();
+
+        this.mvnCrossTests(crossTestTargets);
+    }
+
+    @Task("For maintainers only. Runs tests across JDK versions.")
+    public void jdk_tests() throws Exception {
         this.mvnTestOnJdks(this.supportedJavaVersions());
     }
 
+    @Task("For maintainers only. Releases artifacts to maven central.")
     public void release() throws Exception {
         // get the supported java versions, find the lowest version, then release with that
         int minJavaVersion = this.minimumSupportedJavaVersion();
@@ -223,6 +262,7 @@ public class PublicBlaze {
         this.mvnCommandsWithJdk(minJavaVersion, "release:prepare", "release:perform");
     }
 
+    @Task("For maintainers only. Modifies README docs with latest tagged version.")
     public void after_release() throws IOException {
         this.failIfUncommittedChanges();
 

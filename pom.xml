@@ -38,12 +38,11 @@
             <version>4.3.0</version>
         </dependency>
 
-        <!--<dependency>
+        <dependency>
             <groupId>com.fizzed</groupId>
-            <artifactId>blaze-ssh</artifactId>
-            <version>${blaze.version}</version>
-            <scope>provided</scope>
-        </dependency>-->
+            <artifactId>buildx</artifactId>
+            <version>1.2.0</version>
+        </dependency>
 
         <!-- testing -->
 
