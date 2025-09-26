@@ -189,7 +189,7 @@ public class BaseBlaze {
     // these are default actions every public project should have
 
     protected int[] supportedJavaVersions() {
-        return new int[] {21, 17, 11, 8};
+        return new int[] {25, 21, 17, 11, 8};
     }
 
     protected int minimumSupportedJavaVersion() {

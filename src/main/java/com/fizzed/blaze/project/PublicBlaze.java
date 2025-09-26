@@ -9,7 +9,7 @@ import java.util.List;
 
 import static com.fizzed.blaze.Systems.exec;
 
-public class PublicBlaze extends BaseBlaze{
+public class PublicBlaze extends BaseBlaze {
 
     // public methods
 
