@@ -277,16 +277,19 @@ public class BaseBlaze {
 
     protected List<Target> crossTestTargets() {
         return asList(
-            new Target("linux", "x64").setTags("test").setHost("bmh-build-x64-linux-latest"),
-            new Target("linux", "arm64").setTags("test").setHost("bmh-build-arm64-linux-latest"),
-            new Target("linux", "riscv64").setTags("test").setHost("bmh-build-riscv64-linux-latest"),
-            new Target("linux_musl", "x64").setTags("test").setHost("bmh-build-x64-linux-musl-latest"),
-            new Target("macos", "x64").setTags("test").setHost("bmh-build-x64-macos-latest"),
-            new Target("macos", "arm64").setTags("test").setHost("bmh-build-arm64-macos-latest"),
-            new Target("windows", "x64").setTags("test").setHost("bmh-build-x64-windows-latest"),
-            new Target("windows", "arm64").setTags("test").setHost("bmh-build-arm64-windows-latest"),
-            new Target("freebsd", "x64").setTags("test").setHost("bmh-build-x64-freebsd-latest"),
-            new Target("openbsd", "x64").setTags("test").setHost("bmh-build-x64-openbsd-latest")
+            new Target("linux", "x64", "Ubuntu 24.04").setTags("test", "latest").setHost("bmh-build-x64-linux-latest"),
+            new Target("linux", "x64", "Ubuntu 20.04").setTags("test", "baseline").setHost("bmh-build-x64-linux-baseline"),
+            new Target("linux", "arm64", "Ubuntu 24.04").setTags("test", "latest").setHost("bmh-build-arm64-linux-latest"),
+            new Target("linux", "riscv64", "Ubuntu 24.04").setTags("test", "latest").setHost("bmh-build-riscv64-linux-latest"),
+            new Target("linux_musl", "x64", "Alpine 3.21").setTags("test", "latest").setHost("bmh-build-x64-linux-musl-latest"),
+            new Target("macos", "x64", "MacOS 15").setTags("test", "latest").setHost("bmh-build-x64-macos-latest"),
+            new Target("macos", "x64", "MacOS 11").setTags("test", "baseline").setHost("bmh-build-x64-macos-baseline"),
+            new Target("macos", "arm64", "MacOS 15").setTags("test", "latest").setHost("bmh-build-arm64-macos-latest"),
+            new Target("windows", "x64", "Windows 11").setTags("test", "latest").setHost("bmh-build-x64-windows-latest"),
+            new Target("windows", "x64", "Windows 10").setTags("test", "baseline").setHost("bmh-build-x64-windows-baseline"),
+            new Target("windows", "arm64", "Windows 11").setTags("test", "latest").setHost("bmh-build-arm64-windows-latest"),
+            new Target("freebsd", "x64", "FreeBSD 14.1").setTags("test", "latest").setHost("bmh-build-x64-freebsd-latest"),
+            new Target("openbsd", "x64", "OpenBSD 7.6").setTags("test", "latest").setHost("bmh-build-x64-openbsd-latest")
         );
     }
 
