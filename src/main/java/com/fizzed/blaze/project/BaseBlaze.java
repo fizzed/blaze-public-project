@@ -35,6 +35,39 @@ public class BaseBlaze {
     protected final Config config = Contexts.config();
     protected final Path projectDir = Contexts.withBaseDir("..").toAbsolutePath().normalize();
 
+    // cdn or dl publishing
+
+    private Path locateCdndlProjectDir() {
+        // usual location is ~/workspace/fizzed/cdndl
+        final Path cdndlProjectDir = Contexts.withUserDir("workspace/fizzed/cdndl").toAbsolutePath().normalize();
+
+        if (!Files.exists(cdndlProjectDir) || !Files.isDirectory(cdndlProjectDir)) {
+            fail("Unable to locate 'cdndl' project directory at usual location " + cdndlProjectDir + ". Perhaps you haven't clone it yet OR you are not a Fizzed maintainer and cannot do this?");
+        }
+
+        return cdndlProjectDir;
+    }
+
+    protected void publishToCdn(String cdnPath, Path sourceFileOrdir) throws Exception {
+        this.publishToCdnOrDl("cdn", cdnPath, sourceFileOrdir);
+    }
+
+    protected void publishToDl(String dlPath, Path sourceFileOrdir) throws Exception {
+        this.publishToCdnOrDl("dl", dlPath, sourceFileOrdir);
+    }
+
+    private void publishToCdnOrDl(String cdnSite, String cdnPath, Path sourceFileOrdir) throws Exception {
+        final Path cdndlProjectDir = this.locateCdndlProjectDir();
+
+        // NOTE: if we need to change how these are done we can either do it here, or solely in the cdndl project as well
+
+        // now we simply need to trigger a cdn deploy
+        exec("java", "-jar", "blaze.jar", "publish", "--cdn-site", cdnSite, "--cdn-path", cdnPath, "--source-file", sourceFileOrdir.toAbsolutePath().toString())
+            .verbose()
+            .workingDir(cdndlProjectDir)            // we must execute this command IN the cdndl directory
+            .run();
+    }
+
     protected String repoLatestTag() {
         // get latest tag from git
         return exec("git", "describe", "--abbrev=0", "--tags")
