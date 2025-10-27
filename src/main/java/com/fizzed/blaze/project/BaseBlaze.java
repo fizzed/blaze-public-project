@@ -31,6 +31,7 @@ import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.joining;
 
 public class BaseBlaze {
+
     protected final Logger log = Contexts.logger();
     protected final Config config = Contexts.config();
     protected final Path projectDir = Contexts.withBaseDir("..").toAbsolutePath().normalize();

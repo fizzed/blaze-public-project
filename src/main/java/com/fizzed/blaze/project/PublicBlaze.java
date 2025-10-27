@@ -13,19 +13,19 @@ public class PublicBlaze extends BaseBlaze {
 
     // public methods
 
-    @Task("For maintainers only. Runs tests across operating systems and hardware architectures.")
+    @Task(group="project", value="Runs tests across JDK versions.")
+    public void jdk_tests() throws Exception {
+        this.mvnTestOnJdks(this.supportedJavaVersions());
+    }
+
+    @Task(group="maintainers", value="Runs tests across operating systems and hardware architectures.")
     public void cross_tests() throws Exception {
         final List<Target> crossTestTargets = this.crossTestTargets();
 
         this.mvnCrossTests(crossTestTargets);
     }
 
-    @Task("For maintainers only. Runs tests across JDK versions.")
-    public void jdk_tests() throws Exception {
-        this.mvnTestOnJdks(this.supportedJavaVersions());
-    }
-
-    @Task("For maintainers only. Releases artifacts to maven central.")
+    @Task(group="maintainers", value="Releases artifacts to maven central.")
     public void release() throws Exception {
         // get the supported java versions, find the lowest version, then release with that
         int minJavaVersion = this.minimumSupportedJavaVersion();
@@ -33,7 +33,7 @@ public class PublicBlaze extends BaseBlaze {
         this.mvnCommandsWithJdk(minJavaVersion, "release:prepare", "release:perform");
     }
 
-    @Task("For maintainers only. Modifies README docs with latest tagged version.")
+    @Task(group="maintainers", value="Modifies README docs with latest tagged version.")
     public void after_release() throws IOException {
         this.failIfUncommittedChanges();
 
