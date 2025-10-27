@@ -1,6 +1,7 @@
 package com.fizzed.blaze.project;
 
 import com.fizzed.blaze.Task;
+import com.fizzed.blaze.TaskGroup;
 import com.fizzed.buildx.Target;
 
 import java.io.IOException;
@@ -9,6 +10,7 @@ import java.util.List;
 
 import static com.fizzed.blaze.Systems.exec;
 
+@TaskGroup(value="maintainers", name="Maintainers Only")
 public class PublicBlaze extends BaseBlaze {
 
     // public methods
