@@ -343,11 +343,14 @@ public class BaseBlaze {
             new Target("freebsd", "arm64", "FreeBSD 14").setTags("test", "baseline").setHost("bmh-build-arm64-freebsd-baseline"),
             // riscv freebsd not working yet
 
+            // openbsd
+            // unfortunately, openbsd sucks with ABI compat and so we really can only build & test on the latest versions
+            // plus the latest riscv64 port does not have jdk yet :-(
             new Target("openbsd", "x64", "OpenBSD 7.8").setTags("test", "latest").setHost("bmh-build-x64-openbsd-latest"),
-            new Target("openbsd", "x64", "OpenBSD 7.4").setTags("test", "baseline").setHost("bmh-build-x64-openbsd-baseline"),
-            new Target("openbsd", "arm64", "OpenBSD 7.8").setTags("test", "latest").setHost("bmh-build-arm64-openbsd-latest"),
-            new Target("openbsd", "arm64", "OpenBSD 7.4").setTags("test", "baseline").setHost("bmh-build-arm64-openbsd-baseline"),
-            new Target("openbsd", "riscv64", "OpenBSD 7.8").setTags("test", "latest").setHost("bmh-build-riscv64-openbsd-latest")
+            //new Target("openbsd", "x64", "OpenBSD 7.4").setTags("test", "baseline").setHost("bmh-build-x64-openbsd-baseline"),
+            new Target("openbsd", "arm64", "OpenBSD 7.8").setTags("test", "latest").setHost("bmh-build-arm64-openbsd-latest")
+            //new Target("openbsd", "arm64", "OpenBSD 7.4").setTags("test", "baseline").setHost("bmh-build-arm64-openbsd-baseline"),
+            //new Target("openbsd", "riscv64", "OpenBSD 7.8").setTags("test", "latest").setHost("bmh-build-riscv64-openbsd-latest")
         );
     }
 
