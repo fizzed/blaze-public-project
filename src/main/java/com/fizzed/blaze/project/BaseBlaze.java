@@ -27,6 +27,8 @@ import java.util.stream.Stream;
 
 import static com.fizzed.blaze.Contexts.fail;
 import static com.fizzed.blaze.Systems.exec;
+import static com.fizzed.blaze.util.TerminalHelper.fixedWidthCenter;
+import static com.fizzed.blaze.util.TerminalHelper.fixedWidthLeft;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.joining;
 
@@ -309,38 +311,111 @@ public class BaseBlaze {
             .run();
     }
 
-    protected List<Target> crossTestTargets() {
+    protected List<Target> crossJdkTestTargets() {
+        // dynamically build the target list
+        final int[] javaVersions = this.supportedJavaVersions();
+        final String jdkVersionStr = Arrays.stream(javaVersions).mapToObj(Integer::toString).collect(joining(", "));
+        final long start = System.currentTimeMillis();
+        final List<JavaHome> javaHomes = new ArrayList<>();
+        for (final int javaVersion : javaVersions) {
+            final JavaHome jdkHome = new JavaHomeFinder()
+                .jdk()
+                .version(javaVersion)
+                .preferredDistributions()
+                .sorted()
+                .tryFind()
+                .orElse(null);
+
+            if (jdkHome != null) {
+                javaHomes.add(jdkHome);
+            }
+        }
+
+        log.info("");
+        log.info("Detected JDKs for {} (in {} ms)", jdkVersionStr, (System.currentTimeMillis()-start));
+        for (JavaHome javaHome : javaHomes) {
+            log.info("  {}", javaHome);
+        }
+        log.info("");
+
+        if (javaHomes.isEmpty()) {
+            fail("No JDKs found matching versions " + jdkVersionStr);
+        }
+
+        final List<Target> crossJdkTargets = new ArrayList<>();
+        for (JavaHome javaHome : javaHomes) {
+            final Target target = new Target("jdk-" + javaHome.getVersion().getMajor())
+                .setDescription(javaHome.toString())
+                .putData("java_home", javaHome.getDirectory());
+
+            crossJdkTargets.add(target);
+        }
+
+        return crossJdkTargets;
+    }
+
+    protected void mvnCrossJdkTests(List<Target> crossJdkTestTargets) throws Exception {
+        final boolean serial = this.config.flag("serial").orElse(false);
+
+        log.info(fixedWidthCenter("Usage", 100, '!'));
+        log.info("");
+        log.info("You can modify how this task runs with a few different arguments.");
+        log.info("");
+        log.info("Run these tests in serial mode (default is parallel) (useful for debugging):");
+        log.info("  --serial");
+        log.info("");
+        log.info("Run these tests on a smaller subset of JDKs, as comma-delimited list:");
+        log.info("  --targets jdk-11,jdk-17");
+        log.info("");
+        log.info(fixedWidthLeft("", 100, '!'));
+
+        // pause slighly so you can see the usage info better
+        Thread.sleep(1000);
+
+        new Buildx(crossJdkTestTargets)
+            .parallel(!serial)
+            .resultsFile(null)      // disable results
+            .execute((target, project) -> {
+                // leverage the "java_home" data key to pass the java home to the test
+                project.exec("mvn", "clean", "test")
+                    .workingDir(this.projectDir)
+                    .env("JAVA_HOME", target.getData().get("java_home").toString())
+                    .run();
+            });
+    }
+
+    protected List<Target> crossHostTestTargets() {
         return asList(
             // ubuntu
-            new Target("linux", "x64", "Ubuntu 24.04").setTags("test", "latest").setHost("bmh-build-x64-linux-latest"),
-            new Target("linux", "x64", "Ubuntu 20.04").setTags("test", "baseline").setHost("bmh-build-x64-linux-baseline"),
-            new Target("linux", "arm64", "Ubuntu 24.04").setTags("test", "latest").setHost("bmh-build-arm64-linux-latest"),
-            new Target("linux", "arm64", "Ubuntu 20.04").setTags("test", "baseline").setHost("bmh-build-arm64-linux-baseline"),
-            new Target("linux", "riscv64", "Ubuntu 24.04").setTags("test", "latest").setHost("bmh-build-riscv64-linux-latest"),
+            new Target("linux", "x64", "Ubuntu 24.04").setTags("latest").setHost("bmh-build-x64-linux-latest"),
+            new Target("linux", "x64", "Ubuntu 20.04").setTags("baseline").setHost("bmh-build-x64-linux-baseline"),
+            new Target("linux", "arm64", "Ubuntu 24.04").setTags("latest").setHost("bmh-build-arm64-linux-latest"),
+            new Target("linux", "arm64", "Ubuntu 20.04").setTags("baseline").setHost("bmh-build-arm64-linux-baseline"),
+            new Target("linux", "riscv64", "Ubuntu 24.04").setTags("latest").setHost("bmh-build-riscv64-linux-latest"),
 
             // alpine/musl
-            new Target("linux_musl", "x64", "Alpine 3.22").setTags("test", "latest").setHost("bmh-build-x64-linux-musl-latest"),
-            new Target("linux_musl", "x64", "Alpine 3.15").setTags("test", "baseline").setHost("bmh-build-x64-linux-musl-baseline"),
-            new Target("linux_musl", "arm64", "Alpine 3.22").setTags("test", "latest").setHost("bmh-build-arm64-linux-musl-latest"),
-            new Target("linux_musl", "arm64", "Alpine 3.15").setTags("test", "baseline").setHost("bmh-build-arm64-linux-musl-baseline"),
-            new Target("linux_musl", "riscv64", "Alpine 3.22").setTags("test", "latest").setHost("bmh-build-riscv64-linux-musl-latest"),
+            new Target("linux_musl", "x64", "Alpine 3.22").setTags("latest").setHost("bmh-build-x64-linux-musl-latest"),
+            new Target("linux_musl", "x64", "Alpine 3.15").setTags("baseline").setHost("bmh-build-x64-linux-musl-baseline"),
+            new Target("linux_musl", "arm64", "Alpine 3.22").setTags("latest").setHost("bmh-build-arm64-linux-musl-latest"),
+            new Target("linux_musl", "arm64", "Alpine 3.15").setTags("baseline").setHost("bmh-build-arm64-linux-musl-baseline"),
+            new Target("linux_musl", "riscv64", "Alpine 3.22").setTags("latest").setHost("bmh-build-riscv64-linux-musl-latest"),
 
             // macos
-            new Target("macos", "x64", "MacOS 15").setTags("test", "latest").setHost("bmh-build-x64-macos-latest"),
-            new Target("macos", "x64", "MacOS 11").setTags("test", "baseline").setHost("bmh-build-x64-macos-baseline"),
-            new Target("macos", "arm64", "MacOS 15").setTags("test", "latest").setHost("bmh-build-arm64-macos-latest"),
-            new Target("macos", "arm64", "MacOS 12").setTags("test", "baseline").setHost("bmh-build-arm64-macos-baseline"),
+            new Target("macos", "x64", "MacOS 15").setTags("latest").setHost("bmh-build-x64-macos-latest"),
+            new Target("macos", "x64", "MacOS 11").setTags("baseline").setHost("bmh-build-x64-macos-baseline"),
+            new Target("macos", "arm64", "MacOS 15").setTags("latest").setHost("bmh-build-arm64-macos-latest"),
+            new Target("macos", "arm64", "MacOS 12").setTags("baseline").setHost("bmh-build-arm64-macos-baseline"),
 
             // windows
-            new Target("windows", "x64", "Windows 11").setTags("test", "latest").setHost("bmh-build-x64-windows-latest"),
-            new Target("windows", "x64", "Windows 10").setTags("test", "baseline").setHost("bmh-build-x64-windows-baseline"),
-            new Target("windows", "arm64", "Windows 11").setTags("test", "latest").setHost("bmh-build-arm64-windows-latest"),
+            new Target("windows", "x64", "Windows 11").setTags("latest").setHost("bmh-build-x64-windows-latest"),
+            new Target("windows", "x64", "Windows 10").setTags("baseline").setHost("bmh-build-x64-windows-baseline"),
+            new Target("windows", "arm64", "Windows 11").setTags("latest").setHost("bmh-build-arm64-windows-latest"),
 
             // freebsd
-            new Target("freebsd", "x64", "FreeBSD 15").setTags("test", "latest").setHost("bmh-build-x64-freebsd-latest"),
-            new Target("freebsd", "x64", "FreeBSD 13").setTags("test", "baseline").setHost("bmh-build-x64-freebsd-baseline"),
-            new Target("freebsd", "arm64", "FreeBSD 15").setTags("test", "latest").setHost("bmh-build-arm64-freebsd-latest"),
-            new Target("freebsd", "arm64", "FreeBSD 14").setTags("test", "baseline").setHost("bmh-build-arm64-freebsd-baseline"),
+            new Target("freebsd", "x64", "FreeBSD 15").setTags("latest").setHost("bmh-build-x64-freebsd-latest"),
+            new Target("freebsd", "x64", "FreeBSD 13").setTags("baseline").setHost("bmh-build-x64-freebsd-baseline"),
+            new Target("freebsd", "arm64", "FreeBSD 15").setTags("latest").setHost("bmh-build-arm64-freebsd-latest"),
+            new Target("freebsd", "arm64", "FreeBSD 14").setTags("baseline").setHost("bmh-build-arm64-freebsd-baseline"),
             // riscv freebsd not working yet
 
             // openbsd
@@ -354,12 +429,71 @@ public class BaseBlaze {
         );
     }
 
-    protected void mvnCrossTests(List<Target> crossTestTargets) throws Exception {
-        new Buildx(crossTestTargets)
-            .tags("test")
+    protected void mvnCrossHostTests(List<Target> crossHostTestTargets) throws Exception {
+        final boolean serial = this.config.flag("serial").orElse(false);
+
+        log.info(fixedWidthCenter("Usage", 100, '!'));
+        log.info("");
+        log.info("You can modify how this task runs with a few different arguments.");
+        log.info("");
+        log.info("Run these tests in serial mode (default is parallel) (useful for debugging):");
+        log.info("  --serial");
+        log.info("");
+        log.info("Run these tests on a smaller subset of systems, as comma-delimited list:");
+        log.info("  --targets linux-x64,linux-arm64");
+        log.info("");
+        log.info("Run these tests on a smaller subset of tags, as comma-delimited list:");
+        log.info("  --tags latest,baseline");
+        log.info("");
+        log.info(fixedWidthLeft("", 100, '!'));
+
+        // pause slighly so you can see the usage info better
+        Thread.sleep(1000);
+
+        new Buildx(crossHostTestTargets)
+            .parallel(!serial)
+            .resultsFile(this.projectDir.resolve("buildx-results.txt").toAbsolutePath().normalize())
             .execute((target, project) -> {
-                project.action("mvn", "clean", "test")
+                project.exec("mvn", "clean", "test")
                     .run();
+            });
+    }
+
+    protected void mvnCrossTests(List<Target> crossTestTargets) throws Exception {
+        final boolean serial = this.config.flag("serial").orElse(false);
+
+        log.info(fixedWidthCenter("Usage", 100, '!'));
+        log.info("");
+        log.info("You can modify how this task runs with a few different arguments.");
+        log.info("");
+        log.info("Run these tests in serial mode (default is parallel) (useful for debugging):");
+        log.info("  --serial");
+        log.info("");
+        log.info("Run these tests on a smaller subset of systems, as comma-delimited list:");
+        log.info("  --targets linux-x64,linux-arm64");
+        log.info("");
+        log.info("Run these tests on a smaller subset of tags, as comma-delimited list:");
+        log.info("  --tags latest,baseline");
+        log.info("");
+        log.info(fixedWidthLeft("", 100, '!'));
+
+        // pause slighly so you can see the usage info better
+        Thread.sleep(1000);
+
+        new Buildx(crossTestTargets)
+            .parallel(!serial)
+            .resultsFile(this.projectDir.resolve("buildx-results.txt").toAbsolutePath().normalize())
+            .execute((target, project) -> {
+                if (target.getName().startsWith("jck-")) {
+                    // leverage the "java_home" data key to pass the java home to the test
+                    project.exec("mvn", "clean", "test")
+                        .workingDir(this.projectDir)
+                        .env("JAVA_HOME", target.getData().get("java_home").toString())
+                        .run();
+                } else {
+                    project.exec("mvn", "clean", "test")
+                        .run();
+                }
             });
     }
 
