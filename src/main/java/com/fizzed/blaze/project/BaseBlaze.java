@@ -358,6 +358,7 @@ public class BaseBlaze {
 
         new Buildx(crossJdkTestTargets)
             .parallel(!serial)
+            .resultsFile(null)      // disable results
             .execute((target, project) -> {
                 // leverage the "java_home" data key to pass the java home to the test
                 project.exec("mvn", "clean", "test")
@@ -418,6 +419,7 @@ public class BaseBlaze {
         new Buildx(crossTestTargets)
             .tags("test")
             .parallel(!serial)
+            .resultsFile(this.projectDir.resolve("buildx-results.txt").toAbsolutePath().normalize())
             .execute((target, project) -> {
                 project.exec("mvn", "clean", "test")
                     .run();
