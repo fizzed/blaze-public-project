@@ -309,6 +309,64 @@ public class BaseBlaze {
             .run();
     }
 
+    protected List<Target> crossJdkTestTargets() {
+        // dynamically build the target list
+        final int[] javaVersions = this.supportedJavaVersions();
+        final String jdkVersionStr = Arrays.stream(javaVersions).mapToObj(Integer::toString).collect(joining(", "));
+        final long start = System.currentTimeMillis();
+        final List<JavaHome> javaHomes = new ArrayList<>();
+        for (final int javaVersion : javaVersions) {
+            final JavaHome jdkHome = new JavaHomeFinder()
+                .jdk()
+                .version(javaVersion)
+                .preferredDistributions()
+                .sorted()
+                .tryFind()
+                .orElse(null);
+
+            if (jdkHome != null) {
+                javaHomes.add(jdkHome);
+            }
+        }
+
+        log.info("");
+        log.info("Detected JDKs for {} (in {} ms)", jdkVersionStr, (System.currentTimeMillis()-start));
+        for (JavaHome javaHome : javaHomes) {
+            log.info("  {}", javaHome);
+        }
+        log.info("");
+
+        if (javaHomes.isEmpty()) {
+            fail("No JDKs found matching versions " + jdkVersionStr);
+        }
+
+        final List<Target> crossJdkTargets = new ArrayList<>();
+        for (JavaHome javaHome : javaHomes) {
+            final Target target = new Target("jdk-" + javaHome.getVersion().getMajor())
+                .setDescription(javaHome.toString())
+                .setTags("test")
+                .putData("java_home", javaHome.getDirectory());
+
+            crossJdkTargets.add(target);
+        }
+
+        return crossJdkTargets;
+    }
+
+    protected void mvnCrossJdkTests(List<Target> crossJdkTestTargets) throws Exception {
+        final boolean serial = this.config.flag("serial").orElse(false);
+
+        new Buildx(crossJdkTestTargets)
+            .parallel(!serial)
+            .execute((target, project) -> {
+                // leverage the "java_home" data key to pass the java home to the test
+                project.exec("mvn", "clean", "test")
+                    .workingDir(this.projectDir)
+                    .env("JAVA_HOME", target.getData().get("java_home").toString())
+                    .run();
+            });
+    }
+
     protected List<Target> crossTestTargets() {
         return asList(
             // ubuntu
@@ -355,10 +413,13 @@ public class BaseBlaze {
     }
 
     protected void mvnCrossTests(List<Target> crossTestTargets) throws Exception {
+        final boolean serial = this.config.flag("serial").orElse(false);
+
         new Buildx(crossTestTargets)
             .tags("test")
+            .parallel(!serial)
             .execute((target, project) -> {
-                project.action("mvn", "clean", "test")
+                project.exec("mvn", "clean", "test")
                     .run();
             });
     }
