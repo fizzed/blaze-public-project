@@ -370,7 +370,7 @@ public class BaseBlaze {
         log.info(fixedWidthLeft("", 100, '!'));
 
         // pause slighly so you can see the usage info better
-        Thread.sleep(2000);
+        Thread.sleep(1000);
 
         new Buildx(crossJdkTestTargets)
             .parallel(!serial)
@@ -384,7 +384,7 @@ public class BaseBlaze {
             });
     }
 
-    protected List<Target> crossTestTargets() {
+    protected List<Target> crossHostTestTargets() {
         return asList(
             // ubuntu
             new Target("linux", "x64", "Ubuntu 24.04").setTags("latest").setHost("bmh-build-x64-linux-latest"),
@@ -429,6 +429,36 @@ public class BaseBlaze {
         );
     }
 
+    protected void mvnCrossHostTests(List<Target> crossHostTestTargets) throws Exception {
+        final boolean serial = this.config.flag("serial").orElse(false);
+
+        log.info(fixedWidthCenter("Usage", 100, '!'));
+        log.info("");
+        log.info("You can modify how this task runs with a few different arguments.");
+        log.info("");
+        log.info("Run these tests in serial mode (default is parallel) (useful for debugging):");
+        log.info("  --serial");
+        log.info("");
+        log.info("Run these tests on a smaller subset of systems, as comma-delimited list:");
+        log.info("  --targets linux-x64,linux-arm64");
+        log.info("");
+        log.info("Run these tests on a smaller subset of tags, as comma-delimited list:");
+        log.info("  --tags latest,baseline");
+        log.info("");
+        log.info(fixedWidthLeft("", 100, '!'));
+
+        // pause slighly so you can see the usage info better
+        Thread.sleep(1000);
+
+        new Buildx(crossHostTestTargets)
+            .parallel(!serial)
+            .resultsFile(this.projectDir.resolve("buildx-results.txt").toAbsolutePath().normalize())
+            .execute((target, project) -> {
+                project.exec("mvn", "clean", "test")
+                    .run();
+            });
+    }
+
     protected void mvnCrossTests(List<Target> crossTestTargets) throws Exception {
         final boolean serial = this.config.flag("serial").orElse(false);
 
@@ -448,14 +478,22 @@ public class BaseBlaze {
         log.info(fixedWidthLeft("", 100, '!'));
 
         // pause slighly so you can see the usage info better
-        Thread.sleep(2000);
+        Thread.sleep(1000);
 
         new Buildx(crossTestTargets)
             .parallel(!serial)
             .resultsFile(this.projectDir.resolve("buildx-results.txt").toAbsolutePath().normalize())
             .execute((target, project) -> {
-                project.exec("mvn", "clean", "test")
-                    .run();
+                if (target.getName().startsWith("jck-")) {
+                    // leverage the "java_home" data key to pass the java home to the test
+                    project.exec("mvn", "clean", "test")
+                        .workingDir(this.projectDir)
+                        .env("JAVA_HOME", target.getData().get("java_home").toString())
+                        .run();
+                } else {
+                    project.exec("mvn", "clean", "test")
+                        .run();
+                }
             });
     }
 

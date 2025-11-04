@@ -6,6 +6,7 @@ import com.fizzed.buildx.Target;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.fizzed.blaze.Systems.exec;
@@ -22,11 +23,21 @@ public class PublicBlaze extends BaseBlaze {
         this.mvnCrossJdkTests(crossJdkTestTargets);
     }
 
-    @Task(group="maintainers", value="Runs tests across operating systems and hardware architectures.")
-    public void cross_tests() throws Exception {
-        final List<Target> crossTestTargets = this.crossTestTargets();
+    @Task(group="maintainers", value="Runs tests across various hosts (os/arch combos) that this project supports.")
+    public void cross_host_tests() throws Exception {
+        final List<Target> crossHostTestTargets = this.crossHostTestTargets();
 
-        this.mvnCrossTests(crossTestTargets);
+        this.mvnCrossHostTests(crossHostTestTargets);
+    }
+
+    @Task(group="maintainers", value="Runs tests across both cross_jdk_tests and cross_host_tests in one run with combined results.")
+    public void cross_tests() throws Exception {
+        // both jdk and host tests
+        final List<Target> crossTestTargets = new ArrayList<>();
+        crossTestTargets.addAll(this.crossJdkTestTargets());
+        crossTestTargets.addAll(this.crossHostTestTargets());
+
+        this.mvnCrossHostTests(crossTestTargets);
     }
 
     @Task(group="maintainers", value="Releases artifacts to maven central.")
