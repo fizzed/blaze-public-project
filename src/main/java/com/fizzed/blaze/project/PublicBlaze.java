@@ -16,7 +16,7 @@ public class PublicBlaze extends BaseBlaze {
     // public methods
 
     @Task(group="project", value="Runs tests across various JDK versions that this project supports.")
-    public void jdk_tests() throws Exception {
+    public void cross_jdk_tests() throws Exception {
         final List<Target> crossJdkTestTargets = this.crossJdkTestTargets();
 
         this.mvnCrossJdkTests(crossJdkTestTargets);
