@@ -9,6 +9,7 @@ import com.fizzed.buildx.Buildx;
 import com.fizzed.buildx.Target;
 import com.fizzed.jne.JavaHome;
 import com.fizzed.jne.JavaHomeFinder;
+import com.fizzed.jne.NativeTarget;
 import org.slf4j.Logger;
 
 import java.io.BufferedWriter;
@@ -385,7 +386,11 @@ public class BaseBlaze {
     }
 
     protected List<Target> crossHostTestTargets() {
+        final String arch = NativeTarget.detect().getHardwareArchitecture().toString().toLowerCase();
         return asList(
+            // containers (which by their nature sometimes cause issues with code, so its good to validate they work)
+            // ubuntu22 w/ jdk21 supports x64, arm64, riscv64
+            new Target("linux", arch).setDescription("Ubuntu 22.04").setTags("container").setContainerImage("docker.io/fizzed/buildx:"+arch+"-ubuntu22-jdk21"),
             // ubuntu
             new Target("linux", "x64", "Ubuntu 24.04").setTags("latest").setHost("bmh-build-x64-linux-latest"),
             new Target("linux", "x64", "Ubuntu 20.04").setTags("baseline").setHost("bmh-build-x64-linux-baseline"),
@@ -421,9 +426,9 @@ public class BaseBlaze {
             // openbsd
             // unfortunately, openbsd sucks with ABI compat and so we really can only build & test on the latest versions
             // plus the latest riscv64 port does not have jdk yet :-(
-            new Target("openbsd", "x64", "OpenBSD 7.8").setTags("test", "latest").setHost("bmh-build-x64-openbsd-latest"),
+            new Target("openbsd", "x64", "OpenBSD 7.8").setTags("latest").setHost("bmh-build-x64-openbsd-latest"),
             //new Target("openbsd", "x64", "OpenBSD 7.4").setTags("test", "baseline").setHost("bmh-build-x64-openbsd-baseline"),
-            new Target("openbsd", "arm64", "OpenBSD 7.8").setTags("test", "latest").setHost("bmh-build-arm64-openbsd-latest")
+            new Target("openbsd", "arm64", "OpenBSD 7.8").setTags("latest").setHost("bmh-build-arm64-openbsd-latest")
             //new Target("openbsd", "arm64", "OpenBSD 7.4").setTags("test", "baseline").setHost("bmh-build-arm64-openbsd-baseline"),
             //new Target("openbsd", "riscv64", "OpenBSD 7.8").setTags("test", "latest").setHost("bmh-build-riscv64-openbsd-latest")
         );
