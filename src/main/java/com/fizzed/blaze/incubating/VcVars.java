@@ -1,7 +1,5 @@
 package com.fizzed.blaze.incubating;
 
-import com.fizzed.blaze.core.Action;
-
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
