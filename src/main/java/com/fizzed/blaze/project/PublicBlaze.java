@@ -54,10 +54,7 @@ public class PublicBlaze extends BaseBlaze {
 
     @Task(group="maintainers", value="Releases artifacts to maven central, using the minimum Java version this project supports for the release.")
     public void release() throws Exception {
-        // get the supported java versions, find the lowest version, then release with that
-        int minJavaVersion = this.minimumSupportedJavaVersion();
-
-        this.mvnCommandsWithJdk(minJavaVersion, "release:prepare", "release:perform");
+        this.mvnRelease();
     }
 
     @Task(group="maintainers", value="Modifies README docs with latest tagged version.")

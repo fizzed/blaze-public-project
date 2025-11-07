@@ -336,6 +336,16 @@ public class BaseBlaze {
             .run();
     }
 
+    protected void mvnRelease() throws Exception {
+        this.mvnCommandsWithJdk(this.minimumSupportedJavaVersion(),
+            "clean", "release:prepare", "release:perform");
+    }
+
+    protected void mvnReleaseWithNoTests() throws Exception {
+        this.mvnCommandsWithJdk(this.minimumSupportedJavaVersion(),
+            "clean", "-DskipTests", "-Darguments=-DskipTests", "release:prepare", "release:perform");
+    }
+
     protected List<Target> crossJdkTestTargets() {
         // dynamically build the target list
         final int[] javaVersions = this.supportedJavaVersions();
