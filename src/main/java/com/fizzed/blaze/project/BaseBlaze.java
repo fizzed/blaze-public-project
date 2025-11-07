@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -28,6 +29,7 @@ import java.util.stream.Stream;
 
 import static com.fizzed.blaze.Contexts.fail;
 import static com.fizzed.blaze.Systems.exec;
+import static com.fizzed.blaze.Systems.rm;
 import static com.fizzed.blaze.util.TerminalHelper.fixedWidthCenter;
 import static com.fizzed.blaze.util.TerminalHelper.fixedWidthLeft;
 import static java.util.Arrays.asList;
@@ -37,7 +39,11 @@ public class BaseBlaze {
 
     protected final Logger log = Contexts.logger();
     protected final Config config = Contexts.config();
-    protected final Path projectDir = Contexts.withBaseDir("..").toAbsolutePath().normalize();
+    protected final Path projectDir = this.resolveProjectDir();
+
+    protected Path resolveProjectDir() {
+        return Contexts.withBaseDir("..").toAbsolutePath().normalize();
+    }
 
     // cdn or dl publishing
 
@@ -224,6 +230,24 @@ public class BaseBlaze {
     }
 
     // these are default actions every public project should have
+
+    protected void projectSetup() throws Exception {
+        // nothing by default
+    }
+
+    protected void projectNuke() throws Exception {
+        // if maven project, run "clean"
+        if (Files.exists(this.projectDir.resolve("pom.xml"))) {
+            exec("mvn", "clean")
+                .workingDir(this.projectDir)
+                .run();
+        }
+
+        log.info("Cleaning up possible buildx dirs (e.g. .buildx, .buildx-cache, .buildx-logs)...");
+        rm(this.projectDir.resolve(".buildx")).verbose().recursive().force().run();
+        rm(this.projectDir.resolve(".buildx-cache")).verbose().recursive().force().run();
+        rm(this.projectDir.resolve(".buildx-logs")).verbose().recursive().force().run();
+    }
 
     protected int[] supportedJavaVersions() {
         return new int[] {25, 21, 17, 11, 8};

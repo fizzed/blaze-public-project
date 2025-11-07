@@ -11,12 +11,24 @@ import java.util.List;
 
 import static com.fizzed.blaze.Systems.exec;
 
-@TaskGroup(value="maintainers", name="Maintainers Only")
+@TaskGroup(value="main", name="Main", order=10)
+@TaskGroup(value="project", name="Project", order=100)
+@TaskGroup(value="maintainers", name="Maintainers Only", order=500)
 public class PublicBlaze extends BaseBlaze {
 
     // public methods
 
-    @Task(group="project", value="Runs tests across various JDK versions that this project supports.")
+    @Task(group="main", order=10, value="Sets project up (e.g. checks or downloads dependencies, prepare environment, etc.)")
+    public void setup() throws Exception {
+        this.projectSetup();
+    }
+
+    @Task(group="main", order=20, value="Cleans project up (e.g. by removing build dirs, project cache dirs, etc.)")
+    public void nuke() throws Exception {
+        this.projectNuke();
+    }
+
+    @Task(group="project", order=100, value="Runs tests across various JDK versions that this project supports.")
     public void cross_jdk_tests() throws Exception {
         final List<Target> crossJdkTestTargets = this.crossJdkTestTargets();
 
