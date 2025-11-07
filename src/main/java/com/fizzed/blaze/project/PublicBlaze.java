@@ -52,9 +52,13 @@ public class PublicBlaze extends BaseBlaze {
         this.mvnCrossHostTests(crossTestTargets);
     }
 
+    protected void projectRelease() throws Exception {
+        this.mvnRelease();
+    }
+
     @Task(group="maintainers", value="Releases artifacts to maven central, using the minimum Java version this project supports for the release.")
     public void release() throws Exception {
-        this.mvnRelease();
+        this.projectRelease();
     }
 
     @Task(group="maintainers", value="Modifies README docs with latest tagged version.")
