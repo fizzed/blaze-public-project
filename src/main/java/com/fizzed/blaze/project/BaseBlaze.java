@@ -32,6 +32,7 @@ import static com.fizzed.blaze.Systems.exec;
 import static com.fizzed.blaze.Systems.rm;
 import static com.fizzed.blaze.util.TerminalHelper.fixedWidthCenter;
 import static com.fizzed.blaze.util.TerminalHelper.fixedWidthLeft;
+import static com.fizzed.buildx.prepare.PrepareHostForContainerRecipes.copyMavenSettings;
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.joining;
 
@@ -380,6 +381,7 @@ public class BaseBlaze {
         final List<Target> crossJdkTargets = new ArrayList<>();
         for (JavaHome javaHome : javaHomes) {
             final Target target = new Target("jdk-" + javaHome.getVersion().getMajor())
+                .setTags("jdk")
                 .setDescription(javaHome.toString())
                 .putData("java_home", javaHome.getDirectory());
 
@@ -390,27 +392,10 @@ public class BaseBlaze {
     }
 
     protected void mvnCrossJdkTests(List<Target> crossJdkTestTargets) throws Exception {
-        final boolean serial = this.config.flag("serial").orElse(false);
-
-        log.info(fixedWidthCenter("Usage", 100, '!'));
-        log.info("");
-        log.info("You can modify how this task runs with a few different arguments.");
-        log.info("");
-        log.info("Run these tests in serial mode (default is parallel) (useful for debugging):");
-        log.info("  --serial");
-        log.info("");
-        log.info("Run these tests on a smaller subset of JDKs, as comma-delimited list:");
-        log.info("  --targets jdk-11,jdk-17");
-        log.info("");
-        log.info(fixedWidthLeft("", 100, '!'));
-
-        // pause slighly so you can see the usage info better
-        Thread.sleep(1000);
-
         new Buildx(crossJdkTestTargets)
-            .parallel(!serial)
             .resultsFile(null)      // disable results
-            .execute((target, project) -> {
+            .prepareHostForContainer(copyMavenSettings())
+            .execute((host, project, target) -> {
                 // leverage the "java_home" data key to pass the java home to the test
                 project.exec("mvn", "clean", "test")
                     .workingDir(this.projectDir)
@@ -469,60 +454,19 @@ public class BaseBlaze {
     }
 
     protected void mvnCrossHostTests(List<Target> crossHostTestTargets) throws Exception {
-        final boolean serial = this.config.flag("serial").orElse(false);
-
-        log.info(fixedWidthCenter("Usage", 100, '!'));
-        log.info("");
-        log.info("You can modify how this task runs with a few different arguments.");
-        log.info("");
-        log.info("Run these tests in serial mode (default is parallel) (useful for debugging):");
-        log.info("  --serial");
-        log.info("");
-        log.info("Run these tests on a smaller subset of systems, as comma-delimited list:");
-        log.info("  --targets linux-x64,linux-arm64");
-        log.info("");
-        log.info("Run these tests on a smaller subset of tags, as comma-delimited list:");
-        log.info("  --tags latest,baseline");
-        log.info("");
-        log.info(fixedWidthLeft("", 100, '!'));
-
-        // pause slighly so you can see the usage info better
-        Thread.sleep(1000);
-
         new Buildx(crossHostTestTargets)
-            .parallel(!serial)
             .resultsFile(this.projectDir.resolve("buildx-results.txt").toAbsolutePath().normalize())
-            .execute((target, project) -> {
+            .prepareHostForContainer(copyMavenSettings())
+            .execute((host, project, target) -> {
                 project.exec("mvn", "clean", "test")
                     .run();
             });
     }
 
     protected void mvnCrossTests(List<Target> crossTestTargets) throws Exception {
-        final boolean serial = this.config.flag("serial").orElse(false);
-
-        log.info(fixedWidthCenter("Usage", 100, '!'));
-        log.info("");
-        log.info("You can modify how this task runs with a few different arguments.");
-        log.info("");
-        log.info("Run these tests in serial mode (default is parallel) (useful for debugging):");
-        log.info("  --serial");
-        log.info("");
-        log.info("Run these tests on a smaller subset of systems, as comma-delimited list:");
-        log.info("  --targets linux-x64,linux-arm64");
-        log.info("");
-        log.info("Run these tests on a smaller subset of tags, as comma-delimited list:");
-        log.info("  --tags latest,baseline");
-        log.info("");
-        log.info(fixedWidthLeft("", 100, '!'));
-
-        // pause slighly so you can see the usage info better
-        Thread.sleep(1000);
-
         new Buildx(crossTestTargets)
-            .parallel(!serial)
             .resultsFile(this.projectDir.resolve("buildx-results.txt").toAbsolutePath().normalize())
-            .execute((target, project) -> {
+            .execute((host, project, target) -> {
                 if (target.getName().startsWith("jck-")) {
                     // leverage the "java_home" data key to pass the java home to the test
                     project.exec("mvn", "clean", "test")
