@@ -447,9 +447,12 @@ public class BaseBlaze {
             // plus the latest riscv64 port does not have jdk yet :-(
             new Target("openbsd", "x64", "OpenBSD 7.8").setTags("latest").setHost("bmh-build-x64-openbsd-latest"),
             //new Target("openbsd", "x64", "OpenBSD 7.4").setTags("test", "baseline").setHost("bmh-build-x64-openbsd-baseline"),
-            new Target("openbsd", "arm64", "OpenBSD 7.8").setTags("latest").setHost("bmh-build-arm64-openbsd-latest")
+            new Target("openbsd", "arm64", "OpenBSD 7.8").setTags("latest").setHost("bmh-build-arm64-openbsd-latest"),
             //new Target("openbsd", "arm64", "OpenBSD 7.4").setTags("test", "baseline").setHost("bmh-build-arm64-openbsd-baseline"),
             //new Target("openbsd", "riscv64", "OpenBSD 7.8").setTags("test", "latest").setHost("bmh-build-riscv64-openbsd-latest")
+
+            // netbsd
+            new Target("netbsd", "x64", "NetBSD 10").setTags("latest").setHost("bmh-build-x64-netbsd-latest")
         );
     }
 
