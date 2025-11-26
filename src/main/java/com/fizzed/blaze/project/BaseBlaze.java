@@ -418,11 +418,11 @@ public class BaseBlaze {
             new Target("linux", "riscv64", "Ubuntu 24.04").setTags("latest").setHost("bmh-build-riscv64-linux-latest"),
 
             // alpine/musl
-            new Target("linux_musl", "x64", "Alpine 3.22").setTags("latest").setHost("bmh-build-x64-linux-musl-latest"),
-            new Target("linux_musl", "x64", "Alpine 3.15").setTags("baseline").setHost("bmh-build-x64-linux-musl-baseline"),
-            new Target("linux_musl", "arm64", "Alpine 3.22").setTags("latest").setHost("bmh-build-arm64-linux-musl-latest"),
-            new Target("linux_musl", "arm64", "Alpine 3.15").setTags("baseline").setHost("bmh-build-arm64-linux-musl-baseline"),
-            new Target("linux_musl", "riscv64", "Alpine 3.22").setTags("latest").setHost("bmh-build-riscv64-linux-musl-latest"),
+            new Target("alpine", "x64", "Alpine 3.22").setTags("latest").setHost("bmh-build-x64-alpine-latest"),
+            new Target("alpine", "x64", "Alpine 3.15").setTags("baseline").setHost("bmh-build-x64-alpine-baseline"),
+            new Target("alpine", "arm64", "Alpine 3.22").setTags("latest").setHost("bmh-build-arm64-alpine-latest"),
+            new Target("alpine", "arm64", "Alpine 3.15").setTags("baseline").setHost("bmh-build-arm64-alpine-baseline"),
+            new Target("alpine", "riscv64", "Alpine 3.22").setTags("latest").setHost("bmh-build-riscv64-alpine-latest"),
 
             // macos
             new Target("macos", "x64", "MacOS 15").setTags("latest").setHost("bmh-build-x64-macos-latest"),
