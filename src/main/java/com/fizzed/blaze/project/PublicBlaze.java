@@ -48,8 +48,7 @@ public class PublicBlaze extends BaseBlaze {
         final List<Target> crossTestTargets = new ArrayList<>();
         crossTestTargets.addAll(this.crossJdkTestTargets());
         crossTestTargets.addAll(this.crossHostTestTargets());
-
-        this.mvnCrossHostTests(crossTestTargets);
+        this.mvnCrossTests(crossTestTargets);
     }
 
     protected void projectRelease() throws Exception {
