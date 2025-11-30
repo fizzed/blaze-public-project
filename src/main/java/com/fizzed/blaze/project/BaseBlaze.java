@@ -458,7 +458,8 @@ public class BaseBlaze {
 
     protected void mvnCrossHostTests(List<Target> crossHostTestTargets) throws Exception {
         new Buildx(crossHostTestTargets)
-            .resultsFile(this.projectDir.resolve("buildx-results.txt").toAbsolutePath().normalize())
+            // only update results on ALL cross tests, not just ones for host
+            .resultsFile(null)
             .prepareHostForContainer(copyMavenSettings())
             .execute((host, project, target) -> {
                 project.exec("mvn", "clean", "test")
@@ -467,8 +468,17 @@ public class BaseBlaze {
     }
 
     protected void mvnCrossTests(List<Target> crossTestTargets) throws Exception {
+        // we want to only publish buildx-results.txt if ALL hosts are part of it, if any filtering exists we want
+        // to disable saving the results
+        final boolean disableBuildxResults = this.config.value("targets").orNull() != null || this.config.value("tags").orNull() != null;
+        final Path buildxResultsFile = disableBuildxResults ? null : this.projectDir.resolve("buildx-results.txt").toAbsolutePath().normalize();
+
+        if (buildxResultsFile == null) {
+            log.warn("Disabling buildx results file due to filtering (targets or tags)...");
+        }
+
         new Buildx(crossTestTargets)
-            .resultsFile(this.projectDir.resolve("buildx-results.txt").toAbsolutePath().normalize())
+            .resultsFile(buildxResultsFile)
             .execute((host, project, target) -> {
                 if (target.getName().startsWith("jck-")) {
                     // leverage the "java_home" data key to pass the java home to the test
