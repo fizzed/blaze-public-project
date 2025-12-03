@@ -449,10 +449,15 @@ public class BaseBlaze {
             //new Target("openbsd", "x64", "OpenBSD 7.4").setTags("test", "baseline").setHost("bmh-build-x64-openbsd-baseline"),
             new Target("openbsd", "arm64", "OpenBSD 7.8").setTags("latest").setHost("bmh-build-arm64-openbsd-latest"),
             //new Target("openbsd", "arm64", "OpenBSD 7.4").setTags("test", "baseline").setHost("bmh-build-arm64-openbsd-baseline"),
+            // no java yet on openbsd riscv64
             //new Target("openbsd", "riscv64", "OpenBSD 7.8").setTags("test", "latest").setHost("bmh-build-riscv64-openbsd-latest")
 
             // netbsd
-            new Target("netbsd", "x64", "NetBSD 10").setTags("latest").setHost("bmh-build-x64-netbsd-latest")
+            new Target("netbsd", "x64", "NetBSD 10").setTags("latest").setHost("bmh-build-x64-netbsd-latest"),
+
+            // omnios/solaris/illumos
+            new Target("omnios", "x64", "OmniOS 151056").setTags("latest").setHost("bmh-build-x64-omnios-latest"),
+            new Target("omnios", "x64", "OmniOS 151046").setTags("baseline").setHost("bmh-build-x64-omnios-baseline")
         );
     }
 
